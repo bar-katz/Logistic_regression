@@ -7,7 +7,6 @@ from matplotlib.legend_handler import HandlerLine2D
 
 def main():
     num_of_samples = 100
-    num_of_groups = 3
     num_of_epochs = 30
     eta = 0.1
 
@@ -16,8 +15,14 @@ def main():
                                    np.random.normal(4, 1, num_of_samples),
                                    np.random.normal(6, 1, num_of_samples)], axis=0)
 
-    w = np.zeros(num_of_groups)
-    b = np.zeros(num_of_groups)
+    w, b = train(num_of_epochs, eta, train_data_x, train_data_y)
+
+    draw_by_modal(w, b)
+
+
+def train(num_of_epochs, eta, train_data_x, train_data_y):
+    w = np.zeros(3)
+    b = np.zeros(3)
 
     for e in range(num_of_epochs):
         # shuffle samples
@@ -30,15 +35,18 @@ def main():
             y_hat = np.argmax(softmax(np.dot(w, x) + b))
             if y_hat != y:
                 # loss = loss_neg_log_likelihood(w, b, train_data_x, train_data_y)
+                z = softmax(np.dot(w, x) + b)
                 for i in range(3):
-                    z = softmax(np.dot(w, x) + b)
                     if i == y:
                         w[i] += (-eta * (x * z[i] - x))
                         b[i] += (-eta * (-1 + z[i]))
                     else:
                         w[i] += (-eta * (x * z[i]))
                         b[i] += (-eta * (z[i]))
+    return w, b
 
+
+def draw_by_modal(w, b):
     all_x = list()
     normal_y = list()
     modal_y = list()
@@ -46,9 +54,11 @@ def main():
     for val in range(0, 101):
         x = val / 10.0
         all_x.append(x)
-        normal_y.append(normal(2, x) / (normal(2, x) + normal(4, x) + normal(6, x)))
+        normal_y.append(normal_dist(2, x) / (normal_dist(2, x) + normal_dist(4, x) + normal_dist(6, x)))
         modal_y.append(softmax(np.dot(w, x) + b)[0])
 
+    fig = plt.figure(0)
+    fig.canvas.set_window_title('normal distribution VS logistic regression')
     plt.axis([0, 10, 0, 2])
     plt.xlabel('X')
     plt.ylabel('Probability')
@@ -62,7 +72,7 @@ def main():
     plt.show()
 
 
-def normal(m, x):
+def normal_dist(m, x):
     return (1.0 / math.sqrt(2 * math.pi)) * np.exp((-(x - m) ** 2) / 2)
 
 
